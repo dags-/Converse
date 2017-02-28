@@ -1,0 +1,16 @@
+group 'me.dags'
+version '1.0-SNAPSHOT'
+def spongeAPI = '5.1.0'
+def spongeChannel = 'SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'http://repo.spongepowered.org/maven'
+    }
+}
+
+dependencies {
+    apply plugin: 'java'
+    compile "org.spongepowered:spongeapi:${spongeAPI}-$spongeChannel"
+}
