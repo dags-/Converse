@@ -1,4 +1,4 @@
-package me.dags.converse;
+package me.dags.converse.api;
 
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
@@ -11,5 +11,5 @@ public interface ConversationPrompt {
 
     ConversationPrompt EMPTY = (source, context) -> Text.EMPTY;
 
-    Text getPrompt(CommandSource source, CommandContext context);
+    Text apply(CommandSource source, CommandContext context);
 }
