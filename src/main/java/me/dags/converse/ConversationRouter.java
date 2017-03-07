@@ -1,4 +1,4 @@
-package me.dags.converse.api;
+package me.dags.converse;
 
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;

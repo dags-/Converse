@@ -1,12 +1,11 @@
-package me.dags.converse.api;
+package me.dags.converse;
 
 /**
  * @author dags <dags@dags.me>
  */
 public final class ConversationRoute {
 
-    public static final ConversationRoute EMPTY = new ConversationRoute("");
-    private static final ConversationRoute COMPLETE = new ConversationRoute("");
+    private static final ConversationRoute END = new ConversationRoute("");
 
     private final String key;
 
@@ -14,12 +13,8 @@ public final class ConversationRoute {
         this.key = key;
     }
 
-    public boolean isPresent() {
-        return this != EMPTY && this != COMPLETE;
-    }
-
     public boolean isTerminal() {
-        return this == COMPLETE;
+        return this == END;
     }
 
     @Override
@@ -37,11 +32,11 @@ public final class ConversationRoute {
         return key;
     }
 
-    public static ConversationRoute next(String key) {
+    public static ConversationRoute goTo(String key) {
         return new ConversationRoute(key);
     }
 
-    public static ConversationRoute complete() {
-        return COMPLETE;
+    public static ConversationRoute end() {
+        return END;
     }
 }

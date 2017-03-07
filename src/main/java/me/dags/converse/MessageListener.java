@@ -1,6 +1,5 @@
-package me.dags.converse.dummy;
+package me.dags.converse;
 
-import me.dags.converse.api.Conversation;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
@@ -15,28 +14,39 @@ import java.util.Optional;
  */
 public class MessageListener {
 
+    private final ConversationManager manager;
+
+    MessageListener(ConversationManager manager) {
+        this.manager = manager;
+    }
+
+    @Listener (order = Order.PRE)
+    public void preMessage(MessageChannelEvent event) {
+        manager.tickConversations();
+    }
+
     @Listener (order = Order.LAST)
-    public void onMessage(MessageChannelEvent event) {
+    public void lastMessage(MessageChannelEvent event) {
         if (event.isMessageCancelled()) {
             return;
         }
 
         MutableMessageChannel channel = event.getChannel().orElse(event.getOriginalChannel()).asMutable();
-        Spunge.getConversationManager().removeFromChannel(channel);
+        manager.removeFromChannel(channel);
     }
 
     @Listener (order = Order.PRE)
-    public void onChat(MessageChannelEvent.Chat event, @Root CommandSource source) {
+    public void preChat(MessageChannelEvent.Chat event, @Root CommandSource source) {
         if (event.isMessageCancelled()) {
             return;
         }
 
-        Optional<Conversation> conversation = Spunge.getConversationManager().getConversation(source.getIdentifier());
+        Optional<Conversation> conversation = manager.getConversation(source.getIdentifier());
         if (conversation.isPresent()) {
             event.setCancelled(true);
             event.setMessageCancelled(true);
             String raw = event.getRawMessage().toPlain();
-            Spunge.getConversationManager().post(conversation.get(), raw);
+            manager.process(conversation.get(), raw);
         }
     }
 }

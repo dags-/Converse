@@ -1,17 +1,14 @@
-package me.dags.converse.impl;
+package me.dags.converse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import me.dags.converse.api.Conversation;
-import me.dags.converse.api.ConversationNode;
-import me.dags.converse.api.ConversationRoute;
-import me.dags.converse.api.ConversationSpec;
-import me.dags.converse.dummy.Spunge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.text.Text;
 
 import java.util.*;
@@ -21,11 +18,12 @@ import java.util.function.Consumer;
 /**
  * @author dags <dags@dags.me>
  */
-final class ConversationSpecImpl implements ConversationSpec {
+public final class ConversationSpec implements CommandExecutor {
 
     private final Map<ConversationRoute, ConversationNode> nodes;
     private final Set<String> exitKeywords;
     private final ConversationRoute root;
+    private final ConversationManager manager;
     private final Consumer<Conversation> onExit;
     private final Consumer<Conversation> onExpire;
     private final Consumer<Conversation> onComplete;
@@ -33,10 +31,11 @@ final class ConversationSpecImpl implements ConversationSpec {
     private final long expireTime;
     private final boolean hideMessages;
 
-    private ConversationSpecImpl(Builder builder) {
+    private ConversationSpec(Builder builder) {
         nodes = ImmutableMap.copyOf(builder.children);
         exitKeywords = ImmutableSet.copyOf(builder.exitKeywords);
         root = builder.root;
+        manager = builder.manager;
         onExit = builder.onExit;
         onExpire = builder.onExpire;
         onComplete = builder.onComplete;
@@ -50,48 +49,56 @@ final class ConversationSpecImpl implements ConversationSpec {
     }
 
     @Override
-    public CommandResult startConversation(CommandSource source) throws CommandException {
-        ConversationImpl conversation = new ConversationImpl(source, this);
-        Spunge.getConversationManager().addConversation(conversation);
-        conversation.nextRoute(root);
-        return CommandResult.success();
+    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+        return startConversation(src);
     }
 
-    @Override
-    public boolean isExitKeyword(String input) {
+    public CommandResult startConversation(CommandSource source) throws CommandException {
+        try {
+            Conversation conversation = new Conversation(source, this);
+            manager.addConversation(conversation);
+            conversation.nextRoute(root);
+            return CommandResult.success();
+        } catch (ConversationException e) {
+            throw new CommandException(e.getText(), false);
+        }
+    }
+
+    ConversationManager getManager() {
+        return manager;
+    }
+
+    boolean isExitKeyword(String input) {
         return exitKeywords.contains(input);
     }
 
-    @Override
-    public boolean hidesMessages() {
+    boolean suppressMessages() {
         return hideMessages;
     }
 
-    @Override
-    public void onExit(Conversation conversation) {
-        onExit.accept(conversation);
-    }
-
-    @Override
-    public void onExpire(Conversation conversation) {
-        onExpire.accept(conversation);
-    }
-
-    @Override
-    public void onComplete(Conversation conversation) {
-        onComplete.accept(conversation);
-    }
-
-    @Override
-    public boolean hasExpired(Conversation conversation) {
+    boolean hasExpired(Conversation conversation) {
         return conversation.getAge(timeUnit) >= expireTime;
     }
 
-    static class Builder implements ConversationSpec.Builder {
+    void onExit(Conversation conversation) {
+        onExit.accept(conversation);
+    }
+
+    void onExpire(Conversation conversation) {
+        onExpire.accept(conversation);
+    }
+
+    void onComplete(Conversation conversation) {
+        onComplete.accept(conversation);
+    }
+
+    public static class Builder {
+
+        private final ConversationManager manager;
 
         private Map<ConversationRoute, ConversationNode> children = new HashMap<>();
         private Set<String> exitKeywords = Sets.newHashSet("exit");
-        private ConversationRoute root = ConversationRoute.EMPTY;
+        private ConversationRoute root = null;
         private Consumer<Conversation> onExit = event(Text.of("The conversation has ended"));
         private Consumer<Conversation> onExpire = event(Text.of("The conversation has expired"));
         private Consumer<Conversation> onComplete = conversation -> {};
@@ -99,7 +106,10 @@ final class ConversationSpecImpl implements ConversationSpec {
         private long expireTime = 1L;
         private boolean hideMessages = true;
 
-        @Override
+        Builder(ConversationManager manager) {
+            this.manager = manager;
+        }
+
         public ConversationSpec.Builder nodes(ConversationNode... children) {
             for (ConversationNode node : children) {
                 Preconditions.checkNotNull(node);
@@ -108,7 +118,6 @@ final class ConversationSpecImpl implements ConversationSpec {
             return this;
         }
 
-        @Override
         public ConversationSpec.Builder root(ConversationNode root) {
             Preconditions.checkNotNull(root);
             this.root = root.getRoute();
@@ -116,41 +125,35 @@ final class ConversationSpecImpl implements ConversationSpec {
             return this;
         }
 
-        @Override
         public ConversationSpec.Builder hideMessages(boolean hide) {
             this.hideMessages = hide;
             return this;
         }
 
-        @Override
         public ConversationSpec.Builder exitAlias(String... aliases) {
             exitKeywords.clear();
             Collections.addAll(exitKeywords, aliases);
             return this;
         }
 
-        @Override
         public ConversationSpec.Builder onComplete(Consumer<Conversation> consumer) {
             Preconditions.checkNotNull(consumer);
             this.onComplete = consumer;
             return this;
         }
 
-        @Override
         public ConversationSpec.Builder onExit(Consumer<Conversation> consumer) {
             Preconditions.checkNotNull(consumer);
             this.onExit = consumer;
             return this;
         }
 
-        @Override
         public ConversationSpec.Builder onExpire(Consumer<Conversation> consumer) {
             Preconditions.checkNotNull(consumer);
             this.onExpire = consumer;
             return this;
         }
 
-        @Override
         public Builder timeOut(long period, TimeUnit unit) {
             Preconditions.checkNotNull(unit);
             this.expireTime = period;
@@ -158,9 +161,9 @@ final class ConversationSpecImpl implements ConversationSpec {
             return this;
         }
 
-        @Override
-        public ConversationSpecImpl build() {
-            return new ConversationSpecImpl(this);
+        public ConversationSpec build() {
+            Preconditions.checkNotNull(root, "The root ConversationNode cannot be null!");
+            return new ConversationSpec(this);
         }
 
         private static Consumer<Conversation> event(Text message) {
