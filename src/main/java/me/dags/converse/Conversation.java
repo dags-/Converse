@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author dags <dags@dags.me>
  */
-final class Conversation {
+public final class Conversation {
 
     private final String identifier;
     private final ConversationSpec spec;
@@ -90,15 +90,15 @@ final class Conversation {
         }
     }
 
-    String getIdentifier() {
+    public String getIdentifier() {
         return identifier;
     }
 
-    Optional<CommandSource> getSource() {
+    public Optional<CommandSource> getSource() {
         return Optional.ofNullable(reference.get());
     }
 
-    CommandContext getContext() {
+    public CommandContext getContext() {
         return context;
     }
 

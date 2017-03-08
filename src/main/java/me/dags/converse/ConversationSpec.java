@@ -29,7 +29,7 @@ public final class ConversationSpec implements CommandExecutor {
     private final Consumer<Conversation> onComplete;
     private final TimeUnit timeUnit;
     private final long expireTime;
-    private final boolean hideMessages;
+    private final boolean suppressMessages;
 
     private ConversationSpec(Builder builder) {
         nodes = ImmutableMap.copyOf(builder.children);
@@ -41,7 +41,7 @@ public final class ConversationSpec implements CommandExecutor {
         onComplete = builder.onComplete;
         expireTime = builder.expireTime;
         timeUnit = builder.timeUnit;
-        hideMessages = builder.hideMessages;
+        suppressMessages = builder.suppressMessages;
     }
 
     Optional<ConversationNode> getNode(ConversationRoute key) {
@@ -73,7 +73,7 @@ public final class ConversationSpec implements CommandExecutor {
     }
 
     boolean suppressMessages() {
-        return hideMessages;
+        return suppressMessages;
     }
 
     boolean hasExpired(Conversation conversation) {
@@ -104,7 +104,7 @@ public final class ConversationSpec implements CommandExecutor {
         private Consumer<Conversation> onComplete = conversation -> {};
         private TimeUnit timeUnit = TimeUnit.MINUTES;
         private long expireTime = 1L;
-        private boolean hideMessages = true;
+        private boolean suppressMessages = true;
 
         Builder(ConversationManager manager) {
             this.manager = manager;
@@ -125,8 +125,8 @@ public final class ConversationSpec implements CommandExecutor {
             return this;
         }
 
-        public ConversationSpec.Builder hideMessages(boolean hide) {
-            this.hideMessages = hide;
+        public ConversationSpec.Builder suppressMessages(boolean hide) {
+            this.suppressMessages = hide;
             return this;
         }
 
