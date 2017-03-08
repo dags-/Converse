@@ -6,25 +6,32 @@ package me.dags.converse;
 public final class ConversationRoute {
 
     private static final ConversationRoute END = new ConversationRoute("");
+    private static final ConversationRoute EXIT = new ConversationRoute("");
 
     private final String key;
+    private final int hash;
 
     private ConversationRoute(String key) {
         this.key = key;
+        this.hash = key.hashCode();
     }
 
-    public boolean isTerminal() {
+    boolean isExit() {
+        return this == EXIT;
+    }
+
+    boolean isTerminal() {
         return this == END;
     }
 
     @Override
     public boolean equals(Object other) {
-        return other != null && other.getClass() == this.getClass() && other.hashCode() == this.hashCode();
+        return other != null && other.getClass() == this.getClass() && other.toString().equals(this.toString());
     }
 
     @Override
     public int hashCode() {
-        return key.hashCode();
+        return hash;
     }
 
     @Override
@@ -38,5 +45,9 @@ public final class ConversationRoute {
 
     public static ConversationRoute end() {
         return END;
+    }
+
+    public static ConversationRoute exit() {
+        return EXIT;
     }
 }

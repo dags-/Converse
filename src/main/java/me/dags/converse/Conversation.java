@@ -3,7 +3,6 @@ package me.dags.converse;
 import com.google.common.base.Stopwatch;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.text.Text;
 
 import java.lang.ref.WeakReference;
@@ -18,7 +17,7 @@ public final class Conversation {
     private final String identifier;
     private final ConversationSpec spec;
     private final WeakReference<CommandSource> reference;
-    private final CommandContext context = new CommandContext();
+    private final ConversationContext context = new ConversationContext();
     private final Stopwatch stopwatch = Stopwatch.createStarted();
 
     private ConversationNode node = null;
@@ -39,14 +38,14 @@ public final class Conversation {
         } catch (ConversationException e) {
             e.printStackTrace();
             spec.onExit(this);
-            spec.getManager().removeConversation(getIdentifier());
+            spec.getManager().removeConversation(this);
         }
     }
 
     public void process(String input) throws ConversationException, ArgumentParseException {
         if (getSpec().isExitKeyword(input)) {
             spec.onExit(this);
-            spec.getManager().removeConversation(getIdentifier());
+            spec.getManager().removeConversation(this);
             return;
         }
 
@@ -59,7 +58,7 @@ public final class Conversation {
             }
         } else {
             spec.onExit(this);
-            spec.getManager().removeConversation(getIdentifier());
+            spec.getManager().removeConversation(this);
         }
     }
 
@@ -67,18 +66,23 @@ public final class Conversation {
         Optional<CommandSource> commandSource = getSource();
         if (!commandSource.isPresent()) {
             spec.onExit(this);
-            spec.getManager().removeConversation(getIdentifier());
+            spec.getManager().removeConversation(this);
+            return;
+        }
+
+        if (next.isExit()) {
+            spec.onExit(this);
+            spec.getManager().removeConversation(this);
             return;
         }
 
         if (next.isTerminal()) {
             spec.onComplete(this);
-            spec.getManager().removeConversation(getIdentifier());
+            spec.getManager().removeConversation(this);
             return;
         }
 
         CommandSource source = commandSource.get();
-
         Optional<ConversationNode> nextNode = spec.getNode(next);
 
         if (nextNode.isPresent()) {
@@ -98,7 +102,7 @@ public final class Conversation {
         return Optional.ofNullable(reference.get());
     }
 
-    public CommandContext getContext() {
+    public ConversationContext getContext() {
         return context;
     }
 

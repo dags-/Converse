@@ -1,7 +1,6 @@
 package me.dags.converse;
 
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.text.Text;
 
 /**
@@ -9,7 +8,7 @@ import org.spongepowered.api.text.Text;
  */
 public interface ConversationPrompt {
 
-    ConversationPrompt EMPTY = (source, context) -> Text.EMPTY;
+    ConversationPrompt EMPTY = (src, context) -> Text.EMPTY;
 
-    Text apply(CommandSource source, CommandContext context);
+    Text apply(CommandSource src, ConversationContext context);
 }

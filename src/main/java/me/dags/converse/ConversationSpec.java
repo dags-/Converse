@@ -22,7 +22,7 @@ public final class ConversationSpec implements CommandExecutor {
 
     private final Map<ConversationRoute, ConversationNode> nodes;
     private final Set<String> exitKeywords;
-    private final ConversationRoute root;
+    private final ConversationRoute start;
     private final ConversationManager manager;
     private final Consumer<Conversation> onExit;
     private final Consumer<Conversation> onExpire;
@@ -34,7 +34,7 @@ public final class ConversationSpec implements CommandExecutor {
     private ConversationSpec(Builder builder) {
         nodes = ImmutableMap.copyOf(builder.children);
         exitKeywords = ImmutableSet.copyOf(builder.exitKeywords);
-        root = builder.root;
+        start = builder.start;
         manager = builder.manager;
         onExit = builder.onExit;
         onExpire = builder.onExpire;
@@ -57,7 +57,7 @@ public final class ConversationSpec implements CommandExecutor {
         try {
             Conversation conversation = new Conversation(source, this);
             manager.addConversation(conversation);
-            conversation.nextRoute(root);
+            conversation.nextRoute(start);
             return CommandResult.success();
         } catch (ConversationException e) {
             throw new CommandException(e.getText(), false);
@@ -98,7 +98,7 @@ public final class ConversationSpec implements CommandExecutor {
 
         private Map<ConversationRoute, ConversationNode> children = new HashMap<>();
         private Set<String> exitKeywords = Sets.newHashSet("exit");
-        private ConversationRoute root = null;
+        private ConversationRoute start = null;
         private Consumer<Conversation> onExit = event(Text.of("The conversation has ended"));
         private Consumer<Conversation> onExpire = event(Text.of("The conversation has expired"));
         private Consumer<Conversation> onComplete = conversation -> {};
@@ -118,10 +118,10 @@ public final class ConversationSpec implements CommandExecutor {
             return this;
         }
 
-        public ConversationSpec.Builder root(ConversationNode root) {
-            Preconditions.checkNotNull(root);
-            this.root = root.getRoute();
-            this.children.put(root.getRoute(), root);
+        public ConversationSpec.Builder start(ConversationNode start) {
+            Preconditions.checkNotNull(start);
+            this.start = start.getRoute();
+            this.children.put(start.getRoute(), start);
             return this;
         }
 
@@ -162,7 +162,7 @@ public final class ConversationSpec implements CommandExecutor {
         }
 
         public ConversationSpec build() {
-            Preconditions.checkNotNull(root, "The root ConversationNode cannot be null!");
+            Preconditions.checkNotNull(start, "The root ConversationNode cannot be null!");
             return new ConversationSpec(this);
         }
 
