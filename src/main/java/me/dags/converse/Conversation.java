@@ -29,7 +29,7 @@ public final class Conversation {
         this.spec = spec;
     }
 
-    void processSafely(String input) {
+    public void processSafely(String input) {
         try {
             process(input);
         } catch (ArgumentParseException e) {
@@ -43,7 +43,7 @@ public final class Conversation {
         }
     }
 
-    private void process(String input) throws ConversationException, ArgumentParseException {
+    public void process(String input) throws ConversationException, ArgumentParseException {
         if (getSpec().isExitKeyword(input)) {
             spec.onExit(this);
             spec.getManager().removeConversation(getIdentifier());
