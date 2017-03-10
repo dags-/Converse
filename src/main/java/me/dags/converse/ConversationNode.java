@@ -142,7 +142,7 @@ public final class ConversationNode {
          * @param elements The parameters
          * @return The current Builder
          */
-        public Builder parameter(CommandElement... elements) {
+        public Builder parameters(CommandElement... elements) {
             Collections.addAll(parameters, elements);
             return this;
         }

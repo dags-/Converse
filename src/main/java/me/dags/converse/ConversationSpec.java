@@ -156,7 +156,7 @@ public final class ConversationSpec implements CommandExecutor {
          * @param aliases The aliases used to exit the conversation
          * @return The current builder
          */
-        public ConversationSpec.Builder exitAlias(String... aliases) {
+        public ConversationSpec.Builder exitAliases(String... aliases) {
             exitKeywords.clear();
             Collections.addAll(exitKeywords, aliases);
             return this;
