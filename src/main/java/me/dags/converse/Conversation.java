@@ -6,18 +6,30 @@ import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.text.Text;
 
 import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author dags <dags@dags.me>
+ * Contains all information relevant to a single instance of a Conversation.
+ * The CommandSource involved is weakly referenced.
+ * The time between user inputs is monitored for the purposes of expiring stale Conversations.
+ *
+ * The Conversation will end without further processing if:
+ *  - the CommandSource has been garbage collected
+ *  - the Conversation has been assigned the 'exit' or 'end' ConversationRoute
+ *  - the Conversation has expired
+ *
+ *  If Conversation is assigned a ConversationRoute that does not exist, a ConversationException will be thrown.
+ *  This will typically result in the Conversation being exited & disposed unless a third party is handling the exception.
  */
 public final class Conversation {
 
     private final String identifier;
     private final ConversationSpec spec;
     private final WeakReference<CommandSource> reference;
-    private final ConversationContext context = new ConversationContext();
+    private final ContextCollection context = new ContextCollection();
     private final Stopwatch stopwatch = Stopwatch.createStarted();
 
     private ConversationNode node = null;
@@ -28,24 +40,24 @@ public final class Conversation {
         this.spec = spec;
     }
 
-    public void processSafely(String input) {
-        try {
-            process(input);
-        } catch (ArgumentParseException e) {
-            if (e.getText() != null) {
-                getSource().ifPresent(source -> source.sendMessage(e.getText()));
+    public List<String> complete(String input) throws ArgumentParseException {
+        Optional<CommandSource> source = getSource();
+        if (source.isPresent()) {
+            punchIn();
+            if (node != null) {
+                return node.complete(source.get(), input);
             }
-        } catch (ConversationException e) {
-            e.printStackTrace();
+        } else {
             spec.onExit(this);
-            spec.getManager().removeConversation(this);
+            Converse.getConversationManager().removeConversation(this);
         }
+        return Collections.emptyList();
     }
 
     public void process(String input) throws ConversationException, ArgumentParseException {
         if (getSpec().isExitKeyword(input)) {
             spec.onExit(this);
-            spec.getManager().removeConversation(this);
+            Converse.getConversationManager().removeConversation(this);
             return;
         }
 
@@ -58,7 +70,30 @@ public final class Conversation {
             }
         } else {
             spec.onExit(this);
-            spec.getManager().removeConversation(this);
+            Converse.getConversationManager().removeConversation(this);
+        }
+    }
+
+    public List<String> completeSafely(String input) {
+        try {
+            return complete(input);
+        } catch (ArgumentParseException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    public void processSafely(String input) {
+        try {
+            process(input);
+        } catch (ArgumentParseException e) {
+            if (e.getText() != null) {
+                getSource().ifPresent(source -> source.sendMessage(e.getText()));
+            }
+        } catch (ConversationException e) {
+            e.printStackTrace();
+            spec.onExit(this);
+            Converse.getConversationManager().removeConversation(this);
         }
     }
 
@@ -66,19 +101,19 @@ public final class Conversation {
         Optional<CommandSource> commandSource = getSource();
         if (!commandSource.isPresent()) {
             spec.onExit(this);
-            spec.getManager().removeConversation(this);
+            Converse.getConversationManager().removeConversation(this);
             return;
         }
 
         if (next.isExit()) {
             spec.onExit(this);
-            spec.getManager().removeConversation(this);
+            Converse.getConversationManager().removeConversation(this);
             return;
         }
 
         if (next.isTerminal()) {
             spec.onComplete(this);
-            spec.getManager().removeConversation(this);
+            Converse.getConversationManager().removeConversation(this);
             return;
         }
 
@@ -102,7 +137,7 @@ public final class Conversation {
         return Optional.ofNullable(reference.get());
     }
 
-    public ConversationContext getContext() {
+    public ContextCollection getContext() {
         return context;
     }
 

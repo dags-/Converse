@@ -9,13 +9,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * @author dags <dags@dags.me>
+ * Similar to a CommandContext, the ConversationContext holds the arguments parsed from a CommandSource's input.
  */
-public class ConversationContext {
+public final class ConversationContext {
 
     private final ArrayListMultimap<String, Object> values;
 
@@ -27,28 +28,28 @@ public class ConversationContext {
         return values.containsKey(key);
     }
 
-    public <T> Optional<T> getLast(String key) {
+    public <T> Optional<T> getFirst(Text key) {
+        return getFirst(textToArgKey(key));
+    }
+
+    public <T> Optional<T> getFirst(String key) {
         List<Object> list = values.get(key);
-        if (list.isEmpty()) {
-            return Optional.empty();
+        if (list.size() > 0) {
+            return Optional.ofNullable(cast(list.get(0)));
         }
-        return Optional.ofNullable(cast(list.get(list.size() - 1)));
+        return Optional.empty();
     }
 
     public <T> Optional<T> getLast(Text key) {
         return getLast(textToArgKey(key));
     }
 
-    public <T> Optional<T> getOne(String key) {
+    public <T> Optional<T> getLast(String key) {
         List<Object> list = values.get(key);
-        if (list.size() != 1) {
+        if (list.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(cast(list.get(0)));
-    }
-
-    public <T> Optional<T> getOne(Text key) {
-        return getOne(textToArgKey(key));
+        return Optional.ofNullable(cast(list.get(list.size() - 1)));
     }
 
     public <T> Collection<T> getAll(String key) {
@@ -66,6 +67,14 @@ public class ConversationContext {
 
     public void putArg(Text key, Object value) {
         putArg(textToArgKey(key), value);
+    }
+
+    <T> Stream<T> stream(Text key) {
+        return values.get(textToArgKey(key)).stream().map(ConversationContext::cast);
+    }
+
+    <T> Stream<T> stream(String key) {
+        return values.get(key).stream().map(ConversationContext::cast);
     }
 
     void putAll(String key, Iterable<Object> value) {

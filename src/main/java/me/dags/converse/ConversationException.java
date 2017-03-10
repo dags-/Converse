@@ -5,10 +5,7 @@ import org.spongepowered.api.util.TextMessageException;
 
 import javax.annotation.Nonnull;
 
-/**
- * @author dags <dags@dags.me>
- */
-public class ConversationException extends TextMessageException {
+public final class ConversationException extends TextMessageException {
 
     ConversationException(Text message) {
         super(message);
