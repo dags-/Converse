@@ -3,19 +3,19 @@
 ### Example:
 ```Java
 ConversationNode name = ConversationNode.route("name_node")
-        .parameter(GenericArguments.remainingJoinedStrings(Text.of("name")))
+        .parameters(GenericArguments.remainingJoinedStrings(Text.of("name")))
         .prompt(Text.of("Whats your name bro?"))
         .router(ConversationRoute.goTo("age_node"))
         .build();
 
 ConversationNode age = ConversationNode.route("age_node")
-        .parameter(GenericArguments.remainingJoinedStrings(Text.of("age")))
+        .parameters(GenericArguments.remainingJoinedStrings(Text.of("age")))
         .prompt((src, contexts) -> Text.of("How old are you, ", contexts.getLast("name_node", "name").orElse("bruv"), "?"))
         .router(ConversationRoute.goTo("location_node"))
         .build();
 
 ConversationNode location = ConversationNode.route("location_node")
-        .parameter(GenericArguments.remainingJoinedStrings(Text.of("location")))
+        .parameters(GenericArguments.remainingJoinedStrings(Text.of("location")))
         .prompt(Text.of("Where you at?"))
         .router(ConversationRoute.end())
         .build();
