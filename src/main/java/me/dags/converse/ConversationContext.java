@@ -20,7 +20,7 @@ public final class ConversationContext {
 
     private final ArrayListMultimap<String, Object> values;
 
-    ConversationContext() {
+    public ConversationContext() {
         values = ArrayListMultimap.create();
     }
 
