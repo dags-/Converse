@@ -9,7 +9,7 @@ ConversationNode name = ConversationNode.route("name_node")
         .build();
 
 ConversationNode age = ConversationNode.route("age_node")
-        .parameters(GenericArguments.remainingJoinedStrings(Text.of("age")))
+        .parameters(GenericArguments.integer(Text.of("age")))
         .prompt((src, contexts) -> Text.of("How old are you, ", contexts.getLast("name_node", "name").orElse("bruv"), "?"))
         .router(ConversationRoute.goTo("location_node"))
         .build();
