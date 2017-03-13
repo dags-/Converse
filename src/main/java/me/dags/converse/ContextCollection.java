@@ -78,7 +78,7 @@ public final class ContextCollection {
         return contexts.get(route.toString()).stream().flatMap(context -> context.<T>stream(key)).collect(Collectors.toList());
     }
 
-    void putContext(Object route, ConversationContext context) {
+    public void putContext(Object route, ConversationContext context) {
         contexts.put(route.toString(), context);
     }
 
