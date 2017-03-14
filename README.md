@@ -5,6 +5,7 @@
 ConversationNode name = ConversationNode.route("name_node")
         .parameters(GenericArguments.remainingJoinedStrings(Text.of("name")))
         .prompt(Text.of("Whats your name bro?"))
+        .inputTemplate(TextTemplate.of("> Name:", TextTemplate.arg("name")))
         .router(ConversationRoute.goTo("age_node"))
         .build();
 
@@ -18,6 +19,7 @@ ConversationNode location = ConversationNode.route("location_node")
         .parameters(GenericArguments.remainingJoinedStrings(Text.of("location")))
         .prompt(Text.of("Where you at?"))
         .router(ConversationRoute.end())
+        .suppressInput()
         .build();
 
 ConversationSpec spec = ConversationSpec.builder()

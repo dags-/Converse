@@ -1,14 +1,12 @@
 package me.dags.converse;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Maps;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TranslatableText;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -84,6 +82,20 @@ public final class ConversationContext {
 
     void putAll(Text key, Iterable<Object> value) {
         putAll(textToArgKey(key), value);
+    }
+
+    Map<String, Object> toMap() {
+        Map<String, Object> map = Maps.newHashMap();
+        for (String key : values.keySet()) {
+            List<Object> vals = values.get(key);
+            if (vals.size() == 1) {
+                Object val = vals.get(0);
+                map.put(key, val);
+            } else {
+                map.put(key, vals);
+            }
+        }
+        return map;
     }
 
     @SuppressWarnings("unchecked")

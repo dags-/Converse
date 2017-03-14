@@ -7,6 +7,7 @@ import org.spongepowered.api.command.args.*;
 import org.spongepowered.api.command.args.parsing.InputTokenizer;
 import org.spongepowered.api.command.args.parsing.SingleArg;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,6 +28,7 @@ public final class ConversationNode {
     private final CommandElement sequence;
     private final InputTokenizer tokenizer;
     private final ConversationRoute route;
+    private final TextTemplate inputTemplate;
 
     private ConversationNode(Builder builder) {
         this.router = builder.router;
@@ -35,6 +37,7 @@ public final class ConversationNode {
         this.parameters = ImmutableList.copyOf(builder.parameters);
         this.sequence = GenericArguments.seq(builder.parameters.toArray(new CommandElement[builder.parameters.size()]));
         this.route = builder.route;
+        this.inputTemplate = builder.inputTemplate;
     }
 
     public List<String> complete(CommandSource source, String input) throws ArgumentParseException {
@@ -75,6 +78,10 @@ public final class ConversationNode {
         return prompt;
     }
 
+    public Optional<TextTemplate> getInputTemplate() {
+        return Optional.ofNullable(inputTemplate);
+    }
+
     public static Builder route(String route) {
         return route(ConversationRoute.goTo(route));
     }
@@ -91,6 +98,7 @@ public final class ConversationNode {
         private ConversationPrompt prompt = ConversationPrompt.EMPTY;
         private List<CommandElement> parameters = new ArrayList<>();
         private ConversationRouter router = null;
+        private TextTemplate inputTemplate = TextTemplate.of("> ", TextTemplate.arg("raw_input"));
 
         Builder(ConversationRoute route) {
             this.route = route;
@@ -108,7 +116,7 @@ public final class ConversationNode {
 
         /**
          * Route the conversation via a ConversationRouter
-         * @param router The Router that will evaluate the current ConversationContext and decide which route to move
+         * @param router The Router that will evaluate the ConversationContexts and decide which route to move
          *               on to next
          * @return The current Builder
          */
@@ -144,6 +152,27 @@ public final class ConversationNode {
          */
         public Builder parameters(CommandElement... elements) {
             Collections.addAll(parameters, elements);
+            return this;
+        }
+
+        /**
+         * Set the template for displaying user input. The template args may include 'raw_input' and/or the parameter
+         * names specified for this node.
+         * The template is applied after the input has been parsed and before it has been processed by the router.
+         * @param template The template to use
+         * @return The current Builder
+         */
+        public Builder inputTemplate(TextTemplate template) {
+            this.inputTemplate = template;
+            return this;
+        }
+
+        /**
+         * Specify that user-input is not fed back to the CommandSource
+         * @return The current Builder
+         */
+        public Builder suppressInput() {
+            this.inputTemplate = null;
             return this;
         }
 

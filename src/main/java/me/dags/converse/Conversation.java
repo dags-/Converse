@@ -4,12 +4,13 @@ import com.google.common.base.Stopwatch;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextTemplate;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Contains all information relevant to a single instance of a Conversation.
@@ -22,7 +23,8 @@ import java.util.concurrent.TimeUnit;
  *  - the Conversation has expired
  *
  *  If Conversation is assigned a ConversationRoute that does not exist, a ConversationException will be thrown.
- *  This will typically result in the Conversation being exited & disposed unless a third party is handling the exception.
+ *  This will typically result in the Conversation being exited & disposed-of unless a third party is handling
+ *  the exception.
  */
 public final class Conversation {
 
@@ -65,7 +67,19 @@ public final class Conversation {
         if (source.isPresent()) {
             punchIn();
             if (node != null) {
+                // parse the input string
                 node.parse(source.get(), input, context);
+
+                // feed back the input to the CommandSource
+                Optional<TextTemplate> template = node.getInputTemplate();
+                if (template.isPresent()) {
+                    Map<String, Object> args = getContext().getCurrent().toMap();
+                    args.put("raw_input", input);
+                    Text message = template.get().apply(args).build();
+                    source.get().sendMessage(message);
+                }
+
+                // process the input data
                 node.process(this);
             }
         } else {
@@ -145,12 +159,8 @@ public final class Conversation {
         return spec;
     }
 
-    long getAge(TimeUnit timeUnit) {
-        return stopwatch.elapsed(timeUnit);
-    }
-
     boolean hasExpired() {
-        return spec.hasExpired(this);
+        return spec.getExpireTime() > 0 && stopwatch.elapsed(spec.getTimeUnit()) >= spec.getExpireTime();
     }
 
     boolean suppressMessages() {

@@ -17,11 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * Holds a set of related ConversationNodes and properties that determine ultimately how the conversation behaves.
- * The ConversationSpec is used to create new Conversation instances. Each conversation will first on the defined
- * ConversationRoute. From there, it is up to the ConversationNodes to determine the ultimate path through the
- * conversation, to completion.
- *
+ * The ConversationSpec is used to generate new Conversation instances.
  * ConversationSpec implements CommandExecutor so that it can easily be integrated with Sponge's command API.
  */
 public final class ConversationSpec implements CommandExecutor {
@@ -80,8 +76,12 @@ public final class ConversationSpec implements CommandExecutor {
         return suppressMessages;
     }
 
-    boolean hasExpired(Conversation conversation) {
-        return conversation.getAge(timeUnit) >= expireTime;
+    long getExpireTime() {
+        return expireTime;
+    }
+
+    TimeUnit getTimeUnit() {
+        return timeUnit;
     }
 
     void onExit(Conversation conversation) {

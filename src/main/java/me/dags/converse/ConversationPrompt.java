@@ -14,7 +14,7 @@ public interface ConversationPrompt {
     /**
      * @param src The CommandSource involved in the conversation.
      * @param contexts The contexts of the conversation.
-     * @return The Text that will be sent to the CommandSource to prompt them for chat input.
+     * @return The Text that will be sent to the CommandSource to prompt them for input.
      */
     Text apply(CommandSource src, ContextCollection contexts);
 }

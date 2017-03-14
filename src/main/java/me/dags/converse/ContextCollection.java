@@ -11,11 +11,12 @@ import java.util.stream.Collectors;
 
 /**
  * Holds all ConversationContexts produced during a Conversation.
- * Contexts are keyed against the ConversationNode that produced them.
+ * ConversationContexts are mapped against the route of the ConversationNode that created them.
  * The most recently parsed context can be retrieved via the 'getCurrent' method.
  *
  * A single ConversationNode may be visited multiple times during a conversation with each ConversationContext
- * being stored in order. The area convenience methods for retrieving the first and last inserted contexts.
+ * being stored in order of insertion.
+ * The are convenience methods for retrieving the first and last inserted contexts.
  */
 public final class ContextCollection {
 
